@@ -36,6 +36,7 @@ type Book struct {
 	Author        Author    // Belongs to Author
 	SeriesID      *uint     // Foreign key for Series (nullable)
 	Series        *Series   // Belongs to Series (nullable)
+	SeriesIndex   *float64  // Book's index in the series (e.g., 1, 2.5). Nullable.
 	ISBN          string    `gorm:"index"`
 	FilePath      string    `gorm:"not null;uniqueIndex"` // Path to the original file in the library
 	CoverPath     string    // Path to the extracted cover image

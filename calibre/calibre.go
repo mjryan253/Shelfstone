@@ -101,6 +101,31 @@ func ConvertBook(inputFile string, outputFile string, outputFormat string) error
 	return nil
 }
 
+// ExtractCoverImage extracts the cover image from an ebook file to the specified output path.
+// It uses Calibre's ebook-meta tool. The output path should include the desired extension (e.g., cover.jpg).
+func ExtractCoverImage(bookFilePath string, outputCoverPath string) error {
+	cmd := exec.Command("ebook-meta", bookFilePath, "--get-cover", outputCoverPath)
+
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		// Check if the error is because no cover exists. Calibre might return a non-zero exit code.
+		// Stderr for "no cover" is typically: "No cover found in <file>"
+		if strings.Contains(stderr.String(), "No cover found") {
+			return fmt.Errorf("no cover found in %s: %w", bookFilePath, err)
+		}
+		return fmt.Errorf("error running ebook-meta --get-cover for %s: %w\nStderr: %s", bookFilePath, err, stderr.String())
+	}
+
+	// It's also possible that ebook-meta runs successfully but doesn't actually create a file
+	// if there's no cover (though usually it errors). A check for file existence could be added here if needed.
+	// However, the error check above should catch most cases.
+
+	return nil
+}
+
 /*
 Example Usage (for testing purposes, not part of the final library):
 
