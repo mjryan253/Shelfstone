@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="bookid">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:title>Test Book Title</dc:title>
+    <dc:creator opf:role="aut">Test Author</dc:creator>
+    <dc:language>en</dc:language>
+    <dc:identifier id="bookid">urn:uuid:12345678-1234-5678-1234-567812345678</dc:identifier>
+    <meta name="calibre:series" content="Test Series"/>
+    <meta name="calibre:series_index" content="1"/>
+  </metadata>
+  <manifest>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="text" href="text.html" media-type="application/xhtml+xml"/>
+  </manifest>
+  <spine toc="ncx">
+    <itemref idref="text"/>
+  </spine>
+</package>
