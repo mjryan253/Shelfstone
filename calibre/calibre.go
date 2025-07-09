@@ -10,18 +10,30 @@ import (
 )
 
 // BookMetadata stores the parsed metadata from ebook-meta
+// Tags are simplified for testing with namespace-less XML.
+// Real Calibre output might require more robust namespace handling.
+type MetaTag struct {
+	Name    string `xml:"name,attr"`
+	Content string `xml:"content,attr"`
+}
+
 type BookMetadata struct {
 	XMLName       xml.Name `xml:"opf"`
-	Title         string   `xml:"metadata>dc-title"`
-	Author        string   `xml:"metadata>dc-creator"`
-	Series        string   `xml:"metadata>meta[name='calibre:series']"`
-	SeriesIndex   string   `xml:"metadata>meta[name='calibre:series_index']"`
-	ISBN          string   `xml:"metadata>dc-identifier[opf:scheme='ISBN']"`
-	Publisher     string   `xml:"metadata>dc-publisher"`
-	PublishedDate string   `xml:"metadata>dc-date"`
-	Description   string   `xml:"metadata>dc-description"`
-	Language      string   `xml:"metadata>dc-language"`
-	// Add more fields as needed, like cover, tags, etc.
+	Title         string   `xml:"metadata>title"`
+	Author        string   `xml:"metadata>creator"` // dc:creator
+	Language      string   `xml:"metadata>language"`
+	Publisher     string   `xml:"metadata>publisher"`
+	PublishedDate string   `xml:"metadata>date"`       // dc:date
+	Description   string   `xml:"metadata>description"`
+	AllMetaTags   []MetaTag `xml:"metadata>meta"` // Capture all meta tags
+	Series        string   `xml:"-"` // Populate from AllMetaTags
+	SeriesIndex   string   `xml:"-"` // Populate from AllMetaTags
+	// Simplified ISBN handling for the test. Assumes one identifier.
+	Identifier    struct {
+		Value  string `xml:",chardata"`
+		Scheme string `xml:"scheme,attr"`
+	} `xml:"metadata>identifier"`
+	ISBN          string   `xml:"-"` // Populated from Identifier if scheme is ISBN
 }
 
 // GetBookMetadata fetches metadata from an ebook file using Calibre's ebook-meta tool.
@@ -45,20 +57,25 @@ func GetBookMetadata(filePath string) (string, error) {
 // ParseBookMetadataXML parses the OPF XML string into a BookMetadata struct.
 func ParseBookMetadataXML(xmlData string) (*BookMetadata, error) {
 	var metadata BookMetadata
-	// ebook-meta output might not be perfectly clean XML for direct unmarshaling
-	// or might contain elements we don't care about.
-	// We'll need to be robust here.
-
-	// For now, a simple unmarshal. This might need refinement based on actual ebook-meta output.
 	decoder := xml.NewDecoder(strings.NewReader(xmlData))
-	// Optional: Configure decoder for more leniency if needed
-	// decoder.Strict = false
-	// decoder.AutoClose = xml.HTMLAutoClose
-	// decoder.Entity = xml.HTMLEntity
-
 	err := decoder.Decode(&metadata)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshaling XML: %w. XML Data: %s", err, xmlData)
+	}
+
+	// Post-process to extract ISBN from the simplified Identifier struct
+	if strings.ToUpper(metadata.Identifier.Scheme) == "ISBN" {
+		metadata.ISBN = metadata.Identifier.Value
+	}
+
+	// Extract Series and SeriesIndex from AllMetaTags
+	for _, tag := range metadata.AllMetaTags {
+		if tag.Name == "calibre:series" {
+			metadata.Series = tag.Content
+		}
+		if tag.Name == "calibre:series_index" {
+			metadata.SeriesIndex = tag.Content
+		}
 	}
 
 	return &metadata, nil

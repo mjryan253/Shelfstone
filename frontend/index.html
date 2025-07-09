@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShelfStone Prototype</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        h1 { text-align: center; color: #2c3e50; }
+        #books-list { list-style: none; padding: 0; }
+        #books-list li { background-color: #fff; border: 1px solid #ddd; margin-bottom: 10px; padding: 15px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        #books-list .title { font-weight: bold; }
+        #books-list .author { color: #555; font-style: italic; }
+        #books-list .format { font-size: 0.9em; background-color: #eee; padding: 3px 7px; border-radius: 3px; }
+        .download-link { text-decoration: none; background-color: #3498db; color: white; padding: 8px 12px; border-radius: 4px; font-size: 0.9em; }
+        .download-link:hover { background-color: #2980b9; }
+        #loading { text-align: center; font-size: 1.2em; }
+        #error { text-align: center; color: red; }
+        .book-info div { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <h1>My Ebook Library</h1>
+
+    <div id="loading">Loading books...</div>
+    <div id="error" style="display:none;"></div>
+    <ul id="books-list">
+        <!-- Books will be listed here -->
+    </ul>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', fetchBooks);
+
+        async function fetchBooks() {
+            const listElement = document.getElementById('books-list');
+            const loadingElement = document.getElementById('loading');
+            const errorElement = document.getElementById('error');
+
+            try {
+                const response = await fetch('/api/books');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const books = await response.json();
+
+                loadingElement.style.display = 'none';
+
+                if (books && books.length > 0) {
+                    books.forEach(book => {
+                        const listItem = document.createElement('li');
+
+                        const bookInfo = document.createElement('div');
+                        bookInfo.className = 'book-info';
+
+                        const titleDiv = document.createElement('div');
+                        titleDiv.className = 'title';
+                        titleDiv.textContent = book.title || 'No Title';
+                        bookInfo.appendChild(titleDiv);
+
+                        const authorDiv = document.createElement('div');
+                        authorDiv.className = 'author';
+                        authorDiv.textContent = `By: ${book.authorName || 'Unknown Author'}`;
+                        bookInfo.appendChild(authorDiv);
+
+                        const formatDiv = document.createElement('div');
+                        formatDiv.className = 'format';
+                        formatDiv.textContent = `Format: ${book.format || 'N/A'}`;
+                        bookInfo.appendChild(formatDiv);
+
+                        listItem.appendChild(bookInfo);
+
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = `/api/books/${book.id}/download`;
+                        downloadLink.textContent = 'Download';
+                        downloadLink.className = 'download-link';
+                        listItem.appendChild(downloadLink);
+
+                        listElement.appendChild(listItem);
+                    });
+                } else {
+                    listElement.innerHTML = '<li>No books found in the library. Try ingesting some!</li>';
+                }
+            } catch (e) {
+                console.error('Failed to fetch books:', e);
+                loadingElement.style.display = 'none';
+                errorElement.textContent = 'Failed to load books. Check the console for details.';
+                errorElement.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

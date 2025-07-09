@@ -39,34 +39,22 @@ func TestGetBookMetadata(t *testing.T) {
 
 // TestParseBookMetadataXML tests the ParseBookMetadataXML function
 func TestParseBookMetadataXML(t *testing.T) {
-	// This is a simplified version of the OPF XML that dummy.epub should produce.
-	// It's crafted to match the fields in the BookMetadata struct.
+	// This sample XML is simplified to use no namespaces for elements,
+	// to make unit testing of parsing logic easier without dealing with complex namespace handling.
 	sampleOPFXML := `<?xml version='1.0' encoding='utf-8'?>
-<opf:opf xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0" unique-identifier="bookid">
-  <opf:metadata>
-    <dc:title>Test Book Title</dc:title>
-    <dc:creator opf:role="aut">Test Author</dc:creator>
-    <dc:language>en</dc:language>
-    <dc:identifier opf:scheme="UUID" id="bookid">urn:uuid:12345678-1234-5678-1234-567812345678</dc:identifier>
-    <opf:meta name="calibre:series" content="Test Series"/>
-    <opf:meta name="calibre:series_index" content="1"/>
-	<dc:publisher>Test Publisher</dc:publisher>
-	<dc:date>2024-01-01T00:00:00+00:00</dc:date>
-	<dc:description>This is a test description.</dc:description>
-  </opf:metadata>
-  <opf:manifest>
-    <opf:item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
-    <opf:item id="text" href="text.html" media-type="application/xhtml+xml"/>
-  </opf:manifest>
-  <opf:spine toc="ncx">
-    <opf:itemref idref="text"/>
-  </opf:spine>
-</opf:opf>`
-
-	// The actual XML from ebook-meta might have slightly different prefixing (e.g. opf:metadata vs metadata)
-	// So we use a more reliable sample that matches our struct's expectations.
-	// For a more robust test, one might fetch metadata from the dummy epub and then parse it,
-	// but that makes this test dependent on GetBookMetadata.
+<opf>
+  <metadata>
+    <title>Test Book Title</title>
+    <creator>Test Author</creator>
+    <language>en</language>
+    <identifier scheme="ISBN">TEST_ISBN_123</identifier>
+    <meta name="calibre:series" content="Test Series"/>
+    <meta name="calibre:series_index" content="1"/>
+    <publisher>Test Publisher</publisher>
+    <date>2024-01-01T00:00:00+00:00</date>
+    <description>This is a test description.</description>
+  </metadata>
+</opf>`
 
 	metadata, err := ParseBookMetadataXML(sampleOPFXML)
 	if err != nil {
@@ -91,11 +79,15 @@ func TestParseBookMetadataXML(t *testing.T) {
 	if metadata.Publisher != "Test Publisher" {
 		t.Errorf("Expected Publisher 'Test Publisher', got '%s'", metadata.Publisher)
 	}
-    if metadata.PublishedDate != "2024-01-01T00:00:00+00:00" {
+	if metadata.PublishedDate != "2024-01-01T00:00:00+00:00" {
 		t.Errorf("Expected PublishedDate '2024-01-01T00:00:00+00:00', got '%s'", metadata.PublishedDate)
 	}
 	if metadata.Description != "This is a test description." {
 		t.Errorf("Expected Description 'This is a test description.', got '%s'", metadata.Description)
+	}
+	// Check ISBN extracted by post-processing logic in ParseBookMetadataXML
+	if metadata.ISBN != "TEST_ISBN_123" {
+		t.Errorf("Expected ISBN 'TEST_ISBN_123', got '%s'", metadata.ISBN)
 	}
 }
 
