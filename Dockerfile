@@ -45,9 +45,13 @@ WORKDIR /app
 # Copy the built Go application from the builder stage
 COPY --from=builder /app/libreplex .
 
+# Copy the frontend directory
+COPY frontend ./frontend
+
 # Create non-root user and group for security
 RUN groupadd -r appgroup && useradd -r -g appgroup -d /app -s /sbin/nologin -c "Docker App User" appuser
-RUN chown -R appuser:appgroup /app
+RUN chown -R appuser:appgroup /app && \
+    chown -R appuser:appgroup ./frontend
 # /config and /books will be mounted as volumes, ownership will be handled by docker-compose or user
 # Create directories for volumes if they don't exist and set permissions
 # These directories will be owned by root initially, but Docker volumes will overlay them.
