@@ -6,14 +6,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: libreplex:latest
-    container_name: libreplex
+    image: shelfstone:latest
+    container_name: shelfstone
     ports:
       - "8080:8080"
     volumes:
       - ./example_library/books:/books
       - ./example_library/config:/config
-      - libreplex_cache:/cache # Docker-managed volume for cache
+      - shelfstone_cache:/cache # Docker-managed volume for cache
     restart: unless-stopped
     environment:
       GIN_MODE: debug # Or 'release' for production
@@ -25,4 +25,4 @@ services:
     #   retries: 3
     #   start_period: 5s
 volumes:
-  libreplex_cache: {} # Defines a named volume for cache, managed by Docker
+  shelfstone_cache: {} # Defines a named volume for cache, managed by Docker
